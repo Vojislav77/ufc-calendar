@@ -2,7 +2,7 @@
 
 A modern, responsive web application for tracking UFC events. Features a clean calendar interface, light/dark mode, live iCalendar feed integration, and intelligent caching for optimal performance.
 
-<img width="1185" height="1172" alt="mma-calendar" src="https://github.com/user-attachments/assets/16c02ebe-616c-42e9-9bd0-9b28c45a98c6" />
+
 
 
 
