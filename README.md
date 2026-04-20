@@ -1,6 +1,6 @@
-# 🥊 MMA Calendar
+# 🥊 UFC Calendar
 
-A modern, responsive web application for tracking UFC and MMA events. Features a clean calendar interface, light/dark mode, live iCalendar feed integration, and intelligent caching for optimal performance.
+A modern, responsive web application for tracking UFC events. Features a clean calendar interface, light/dark mode, live iCalendar feed integration, and intelligent caching for optimal performance.
 
 <img width="1185" height="1172" alt="mma-calendar" src="https://github.com/user-attachments/assets/16c02ebe-616c-42e9-9bd0-9b28c45a98c6" />
 
@@ -41,13 +41,13 @@ A modern, responsive web application for tracking UFC and MMA events. Features a
 
 ## ☁️ Live Demo
 
-[Click here to try it live](https://vojislav77.github.io/mma-calendar)
+[Click here to try it live](https://vojislav77.github.io/ufc-calendar)
 
 ## 📦 Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mma-calendar.git
+git clone https://github.com/vojislav77/ufc-calendar.git
 
 # Navigate to directory
 cd mma-calendar
