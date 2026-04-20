@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MMA Calendar - UFC Events</title>
+  
+  <!-- ✅ FIXED FAVICON: Corrected Data URI syntax and added Apple Touch Icon support -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23e63946'/><text x='50' y='58' font-family='Arial' font-size='28' font-weight='bold' text-anchor='middle' fill='white'>MMA</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23e63946'/><text x='50' y='58' font-family='Arial' font-size='28' font-weight='bold' text-anchor='middle' fill='white'>MMA</text></svg>">
+  
+  <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --bg-card: #ffffff;
+      --text-primary: #1a1a1a;
+      --text-secondary: #495057;
+      --border-color: #dee2e6;
+      --accent: #e63946;
+      --accent-hover: #c1121f;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+      --error-bg: #fff5f5;
+      --error-border: #feb2b2;
+      --error-text: #c53030;
+      --loading-bg: #edf2f7;
+      --success-bg: #f0fff4;
+      --success-border: #9ae6b4;
+      --success-text: #276749;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #121212;
+      --bg-secondary: #1e1e1e;
+      --bg-card: #252525;
+      --text-primary: #f8f9fa;
+      --text-secondary: #adb5bd;
+      --border-color: #333;
+      --accent: #ff6b6b;
+      --accent-hover: #ee5a5a;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --error-bg: #2d1a1a;
+      --error-border: #742a2a;
+      --error-text: #fc8181;
+      --loading-bg: #2d3748;
+      --success-bg: #1a3a2a;
+      --success-border: #2c7a5a;
+      --success-text: #9ae6b4;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      transition: var(--transition);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+      position: sticky;
+      top: 0;
+      background: var(--bg-primary);
+      z-index: 100;
+      transition: var(--transition);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    /* BIGGER LOGO ICON */
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .logo-text:first-child {
+      font-size: 1.4rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .logo-text span {
+      font-size: 0.8em;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .theme-toggle {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      width: 50px;
+      height: 28px;
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+      transition: var(--transition);
+    }
+
+    .theme-toggle::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      left: 3px;
+      transition: var(--transition);
+    }
+
+    [data-theme="dark"] .theme-toggle::after {
+      left: calc(100% - 25px);
+      background: #ffd43b;
+    }
+
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--bg-secondary);
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .month-nav button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .month-nav button:hover {
+      background: var(--accent-hover);
+      transform: scale(1.05);
+    }
+
+    .month-nav button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .current-month {
+      font-weight: 600;
+      font-size: 1.25rem;
+      min-width: 180px;
+      text-align: center;
+    }
+
+    /* Data Source Selector */
+    .data-source-selector {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .data-source-selector label {
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .data-source-selector select {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      cursor: pointer;
+      min-width: 200px;
+    }
+
+    .data-source-info {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .data-source-info .badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-demo { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+    .badge-live { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+    .badge-error { background: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border); }
+
+    /* Loading & Error States */
+    .status-container {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: var(--bg-card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+    }
+
+    .loading-container { display: none; }
+    .error-container { display: none; background: var(--error-bg); border: 1px solid var(--error-border); color: var(--error-text); }
+    .success-container { display: none; background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success-text); }
+
+    .loading-container.active,
+    .error-container.active,
+    .success-container.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--loading-bg);
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text { color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .loading-subtext { font-size: 0.9rem; opacity: 0.8; }
+
+    .error-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+    .error-title { font-weight: 600; margin-bottom: 0.5rem; font-size: 1.2rem; }
+    .error-message { margin-bottom: 1.5rem; opacity: 0.9; line-height: 1.5; }
+    .error-details {
+      background: rgba(0,0,0,0.05);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      text-align: left;
+      margin-bottom: 1rem;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    [data-theme="dark"] .error-details {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+    .btn-outline:hover { background: var(--bg-secondary); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .cache-indicator {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+
+    .cache-indicator.cached::before { content: '✓'; color: #38a169; font-weight: bold; }
+    .cache-indicator.live::before {
+      content: '●';
+      color: var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Calendar */
+    .calendar {
+      background: var(--bg-card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 2rem;
+      display: none;
+    }
+
+    .calendar.loaded {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .calendar-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--bg-secondary);
+      padding: 1rem;
+      font-weight: 600;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: var(--border-color);
+    }
+
+    .calendar-day {
+      min-height: 100px;
+      background: var(--bg-primary);
+      padding: 0.5rem;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .calendar-day:hover { background: var(--bg-secondary); }
+    .calendar-day.other-month {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+
+    .day-number {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: block;
+      text-align: right;
+      font-size: 0.9rem;
+    }
+
+    .today .day-number {
+      background: var(--accent);
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+    }
+
+    /* Event Cards */
+    .event-card {
+      background: var(--accent);
+      color: white;
+      border-radius: 8px;
+      padding: 0.5rem;
+      margin: 0.25rem 0;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition);
+      border-left: 3px solid rgba(255,255,255,0.3);
+    }
+
+    .event-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .event-card.main { background: linear-gradient(135deg, var(--accent), #9d0208); font-weight: 500; }
+    .event-card.prelim { background: linear-gradient(135deg, #457b9d, #1d3557); }
+    .event-card.early { background: linear-gradient(135deg, #2a9d8f, #1d6b63); font-size: 0.8rem; }
+
+    .event-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .event-meta {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .event-time { font-weight: 500; }
+    .event-location {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal.active { display: flex; }
+
+    .modal-content {
+      background: var(--bg-card);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      position: relative;
+      animation: modalSlide 0.3s ease;
+    }
+
+    @keyframes modalSlide {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .modal-close:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .event-detail {
+      display: flex;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+    }
+
+    .event-detail-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+      font-size: 1.1rem;
+    }
+
+    .event-detail-content h4 {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .event-detail-content p { font-weight: 500; }
+
+    .fighters-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .fighter-tag {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    /* MOBILE ADJUSTMENTS */
+    @media (max-width: 768px) {
+      .calendar-header, .calendar-grid { grid-template-columns: repeat(7, 1fr); font-size: 0.8rem; }
+      .calendar-day { min-height: 80px; padding: 0.3rem; }
+      .day-number { font-size: 0.8rem; }
+      .event-card { font-size: 0.75rem; padding: 0.4rem; }
+      .month-nav { padding: 0.5rem 1rem; }
+      .current-month { font-size: 1.1rem; min-width: 140px; }
+      .header-actions { gap: 0.5rem; }
+      .theme-toggle { width: 44px; height: 24px; }
+      .theme-toggle::after { width: 18px; height: 18px; }
+      [data-theme="dark"] .theme-toggle::after { left: calc(100% - 21px); }
+      .data-source-selector { flex-direction: column; align-items: stretch; }
+      .data-source-info { margin-left: 0; justify-content: center; }
+      
+      /* LOGO MOBILE */
+      .logo-icon { width: 48px; height: 48px; font-size: 0.95rem; }
+      .logo-text:first-child { font-size: 1.2rem; }
+    }
+
+    @media (max-width: 480px) {
+      header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+      .header-actions { width: 100%; justify-content: space-between; }
+      .calendar-header, .calendar-grid { grid-template-columns: repeat(7, 1fr); font-size: 0.7rem; }
+      .calendar-day { min-height: 70px; padding: 0.2rem; }
+      .event-card { font-size: 0.7rem; padding: 0.3rem; }
+      .event-name { font-size: 0.8rem; }
+      .action-buttons { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <!-- LOGO: "MMA Calendar" with bigger icon -->
+      <a href="#" class="logo" aria-label="MMA Calendar Home">
+        <div class="logo-icon">MMA</div>
+        <div class="logo-text">
+          MMA Calendar
+          <span>UFC Events Tracker</span>
+        </div>
+      </a>
+      
+      <div class="header-actions">
+        <div class="month-nav">
+          <button id="prev-month" aria-label="Previous month">❮</button>
+          <div class="current-month" id="current-month-display">April 2026</div>
+          <button id="next-month" aria-label="Next month">❯</button>
+        </div>
+        
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+          <span class="sr-only">Toggle theme</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Data Source Selector -->
+      <div class="data-source-selector">
+        <label for="data-source">Data Source:</label>
+        <select id="data-source">
+          <option value="demo">🎯 Demo Mode (Instant Load)</option>
+          <option value="live">🌐 Live Feed (mmacalendars.com)</option>
+        </select>
+        <div class="data-source-info">
+          <span class="badge badge-demo" id="source-badge">Demo</span>
+          <span id="source-description">Sample UFC events - no internet required</span>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-state" class="status-container loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading UFC events...</p>
+        <p class="loading-subtext" id="loading-subtext">Trying proxy 1 of 3...</p>
+        <p class="cache-indicator live">Fetching live data</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="error-state" class="status-container error-container">
+        <span class="error-icon">⚠️</span>
+        <h3 class="error-title">Connection Issue</h3>
+        <p class="error-message" id="error-message">
+          Could not fetch UFC calendar data.
+        </p>
+        <div class="error-details" id="error-details" style="display: none;"></div>
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="retry-btn">🔄 Retry Connection</button>
+          <button class="btn btn-outline" id="use-demo-btn">🎯 Use Demo Mode Instead</button>
+        </div>
+        <p class="cache-indicator" id="cache-status"></p>
+      </div>
+
+      <!-- Success State -->
+      <div id="success-state" class="status-container success-container">
+        <span style="font-size: 2.5rem; margin-bottom: 0.75rem;">✅</span>
+        <h3 style="font-weight: 600; margin-bottom: 0.5rem;">Events Loaded Successfully!</h3>
+        <p id="success-message" style="opacity: 0.9;"></p>
+        <button class="btn btn-outline" id="dismiss-success" style="margin-top: 1rem;">Got it</button>
+      </div>
+
+      <!-- Calendar -->
+      <div class="calendar" id="calendar">
+        <div class="calendar-header">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div>
+          <div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Event Modal -->
+  <div class="modal" id="event-modal" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">Event Details</h2>
+        <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="modal-cancel">Close</button>
+        <a href="#" class="btn btn-primary" id="modal-ufc-link" target="_blank" rel="noopener">View on UFC.com</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      icalUrl: 'https://mmacalendars.com/ufc',
+      corsProxies: [
+        'https://api.codetabs.com/v1/proxy?quest=',
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url='
+      ],
+      cacheKey: 'mma_calendar_events_final',
+      cacheExpiry: 6 * 60 * 60 * 1000,
+      retryDelay: 2000,
+      maxRetries: 3,
+      // ✅ DEMO EVENTS WITH WORKING UFC.COM URLS
+      demoEvents: [
+        {
+          id: 'demo-ufc-327',
+          title: 'UFC 327: Prochazka vs Ulberg',
+          type: 'main',
+          date: '2026-04-11',
+          time: '22:00',
+          endTime: '02:00',
+          location: 'T-Mobile Arena, Las Vegas, NV',
+          fighters: ['Jiří Procházka', 'Carlos Ulberg', 'Paulo Costa', 'Curtis Blaydes'],
+          // ✅ FIXED: Link to UFC events page
+          url: 'https://www.ufc.com/events',
+          description: 'Light Heavyweight main event featuring former champion Jiří Procházka.'
+        },
+        {
+          id: 'demo-ufc-fn-apr18',
+          title: 'UFC Fight Night: Burns vs Malott',
+          type: 'main',
+          date: '2026-04-18',
+          time: '20:00',
+          endTime: '23:00',
+          location: 'Scotiabank Arena, Toronto, Canada',
+          fighters: ['Gilbert Burns', 'Mike Malott', 'Charles Jourdain'],
+          url: 'https://www.ufc.com/events',
+          description: 'Welterweight showdown in Toronto.'
+        },
+        {
+          id: 'demo-ufc-fn-apr25',
+          title: 'UFC Fight Night: Sterling vs Zalal',
+          type: 'main',
+          date: '2026-04-25',
+          time: '21:00',
+          endTime: '00:00',
+          location: 'UFC Apex, Las Vegas, NV',
+          fighters: ['Aljamain Sterling', 'Youssef Zalal', 'Rafa Garcia'],
+          url: 'https://www.ufc.com/events',
+          description: 'Bantamweight action from the UFC Apex.'
+        },
+        {
+          id: 'demo-ufc-327-prelims',
+          title: 'Prelims: UFC 327',
+          type: 'prelim',
+          date: '2026-04-11',
+          time: '20:00',
+          endTime: '22:00',
+          location: 'T-Mobile Arena, Las Vegas, NV',
+          fighters: ['Patricio Pitbull', 'Aaron Pico', 'Kevin Holland'],
+          url: 'https://www.ufc.com/events'
+        },
+        {
+          id: 'demo-ufc-328',
+          title: 'UFC 328: Chimaev vs Strickland',
+          type: 'main',
+          date: '2026-05-09',
+          time: '21:00',
+          endTime: '01:00',
+          location: 'Etihad Arena, Abu Dhabi, UAE',
+          fighters: ['Khamzat Chimaev', 'Sean Strickland', 'Alexander Volkov'],
+          url: 'https://www.ufc.com/events',
+          description: 'Middleweight title eliminator in Abu Dhabi.'
+        }
+      ]
+    };
+
+    // State
+    let currentDate = new Date(2026, 3, 1);
+    let selectedEvent = null;
+    let ufcEvents = [];
+    let isLoading = false;
+    let dataSource = 'demo';
+    let cacheStatus = { isCached: false, lastFetch: null };
+
+    // DOM Elements
+    const elements = {
+      calendarGrid: document.getElementById('calendar-grid'),
+      currentMonthDisplay: document.getElementById('current-month-display'),
+      prevMonthBtn: document.getElementById('prev-month'),
+      nextMonthBtn: document.getElementById('next-month'),
+      themeToggle: document.getElementById('theme-toggle'),
+      eventModal: document.getElementById('event-modal'),
+      modalBody: document.getElementById('modal-body'),
+      modalTitle: document.getElementById('modal-title'),
+      modalClose: document.getElementById('modal-close'),
+      modalCancel: document.getElementById('modal-cancel'),
+      modalUfcLink: document.getElementById('modal-ufc-link'),
+      loadingState: document.getElementById('loading-state'),
+      errorState: document.getElementById('error-state'),
+      successState: document.getElementById('success-state'),
+      errorMessage: document.getElementById('error-message'),
+      errorDetails: document.getElementById('error-details'),
+      retryBtn: document.getElementById('retry-btn'),
+      useDemoBtn: document.getElementById('use-demo-btn'),
+      cacheStatusEl: document.getElementById('cache-status'),
+      calendarEl: document.getElementById('calendar'),
+      dataSourceSelect: document.getElementById('data-source'),
+      sourceBadge: document.getElementById('source-badge'),
+      sourceDescription: document.getElementById('source-description'),
+      loadingSubtext: document.getElementById('loading-subtext'),
+      successMessage: document.getElementById('success-message'),
+      dismissSuccess: document.getElementById('dismiss-success')
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+      loadTheme();
+      setupEventListeners();
+      loadDataSourcePreference();
+      await loadEvents();
+    });
+
+    // Theme Management
+    function loadTheme() {
+      const saved = localStorage.getItem('mma-calendar-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('mma-calendar-theme', next);
+    }
+
+    // Data Source Management
+    function loadDataSourcePreference() {
+      const saved = localStorage.getItem('mma-calendar-datasource') || 'demo';
+      dataSource = saved;
+      elements.dataSourceSelect.value = saved;
+      updateDataSourceUI();
+    }
+
+    function saveDataSourcePreference(source) {
+      localStorage.setItem('mma-calendar-datasource', source);
+    }
+
+    function updateDataSourceUI() {
+      if (dataSource === 'demo') {
+        elements.sourceBadge.textContent = 'Demo';
+        elements.sourceBadge.className = 'badge badge-demo';
+        elements.sourceDescription.textContent = 'Sample UFC events - no internet required';
+      } else {
+        elements.sourceBadge.textContent = 'Live';
+        elements.sourceBadge.className = 'badge badge-live';
+        elements.sourceDescription.textContent = 'Fetching from mmacalendars.com';
+      }
+    }
+
+    // Caching System
+    function getCachedEvents() {
+      try {
+        const cached = localStorage.getItem(CONFIG.cacheKey);
+        if (!cached) return null;
+        const { events, timestamp, source } = JSON.parse(cached);
+        const now = Date.now();
+        if (source === dataSource && (now - timestamp) < CONFIG.cacheExpiry) {
+          console.log('✓ Using cached events');
+          cacheStatus = { isCached: true, lastFetch: new Date(timestamp) };
+          return events;
+        }
+        return null;
+      } catch (e) {
+        console.error('Cache read error:', e);
+        return null;
+      }
+    }
+
+    function cacheEvents(events) {
+      try {
+        const data = { events, timestamp: Date.now(), source: dataSource };
+        localStorage.setItem(CONFIG.cacheKey, JSON.stringify(data));
+        cacheStatus = { isCached: true, lastFetch: new Date() };
+        updateCacheIndicator();
+      } catch (e) {
+        console.error('Cache write error:', e);
+      }
+    }
+
+    function updateCacheIndicator() {
+      if (!elements.cacheStatusEl) return;
+      if (cacheStatus.isCached && cacheStatus.lastFetch) {
+        const ago = getTimeAgo(cacheStatus.lastFetch);
+        elements.cacheStatusEl.textContent = `Data updated ${ago}`;
+        elements.cacheStatusEl.className = 'cache-indicator cached';
+      } else {
+        elements.cacheStatusEl.textContent = dataSource === 'demo' ? 'Demo data' : 'Live data';
+        elements.cacheStatusEl.className = 'cache-indicator live';
+      }
+    }
+
+    function getTimeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      const intervals = [
+        { l: 'year', s: 31536000 }, { l: 'month', s: 2592000 },
+        { l: 'day', s: 86400 }, { l: 'hour', s: 3600 },
+        { l: 'minute', s: 60 }, { l: 'second', s: 1 }
+      ];
+      for (let i of intervals) {
+        const c = Math.floor(seconds / i.s);
+        if (c > 0) return `${c} ${i.l}${c>1?'s':''} ago`;
+      }
+      return 'just now';
+    }
+
+    // Event Loading
+    async function loadEvents(forceRefresh = false) {
+      if (isLoading) return;
+      showLoading();
+      isLoading = true;
+      
+      try {
+        if (!forceRefresh && dataSource !== 'demo') {
+          const cached = getCachedEvents();
+          if (cached) {
+            ufcEvents = cached;
+            hideLoading();
+            showSuccess(`Loaded ${cached.length} events from cache`);
+            renderCalendar();
+            return;
+          }
+        }
+        
+        if (dataSource === 'demo') {
+          await new Promise(r => setTimeout(r, 500));
+          ufcEvents = CONFIG.demoEvents.map(e => ({...e, isNew: isNewEvent(new Date(e.date))}));
+          hideLoading();
+          showSuccess(`Loaded ${ufcEvents.length} demo events`);
+          renderCalendar();
+          return;
+        }
+        
+        await fetchLiveEvents();
+        
+      } catch (error) {
+        console.error('Load error:', error);
+        showError(error.message || 'Failed to load events');
+        if (dataSource === 'live') {
+          showError('Live feed unavailable. Switch to Demo mode for instant access.', true);
+        }
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    async function fetchLiveEvents() {
+      let lastError = null;
+      for (let i = 0; i < CONFIG.corsProxies.length; i++) {
+        const proxy = CONFIG.corsProxies[i];
+        const fetchUrl = `${proxy}${encodeURIComponent(CONFIG.icalUrl)}`;
+        elements.loadingSubtext.textContent = `Trying proxy ${i+1} of ${CONFIG.corsProxies.length}...`;
+        
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
+          const response = await fetch(fetchUrl, { signal: controller.signal, headers: { 'Accept': 'text/calendar' } });
+          clearTimeout(timeout);
+          
+          if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          const icsText = await response.text();
+          if (!icsText.includes('BEGIN:VCALENDAR')) throw new Error('Invalid iCal format');
+          
+          ufcEvents = parseICalData(icsText);
+          if (ufcEvents.length === 0) throw new Error('No events found');
+          
+          cacheEvents(ufcEvents);
+          hideLoading();
+          showSuccess(`Loaded ${ufcEvents.length} live events`);
+          renderCalendar();
+          return;
+          
+        } catch (error) {
+          lastError = error;
+          console.warn(`Proxy ${i+1} failed:`, error.message);
+        }
+      }
+      throw new Error(`All proxies failed. Last error: ${lastError?.message || 'Unknown'}`);
+    }
+
+    function parseICalData(icsText) {
+      try {
+        const jcal = ICAL.parse(icsText);
+        const comp = new ICAL.Component(jcal);
+        const vevents = comp.getAllSubcomponents('vevent');
+        
+        return vevents.map(vevent => {
+          const event = new ICAL.Event(vevent);
+          const summary = event.summary || 'UFC Event';
+          const location = event.location || 'TBD';
+          const start = event.startDate.toJSDate();
+          const end = event.endDate?.toJSDate() || start;
+          
+          let type = 'main';
+          const lower = summary.toLowerCase();
+          if (lower.includes('prelim')) type = 'prelim';
+          else if (lower.includes('early')) type = 'early';
+          
+          const fighters = extractFighters(summary, event.description);
+          // ✅ FIXED: Always link to UFC events page
+          const url = event.url || generateWorkingUfcUrl(summary, start);
+          
+          return {
+            id: event.uid || `ufc-${Date.now()}-${Math.random().toString(36).slice(2,9)}`,
+            title: summary,
+            type,
+            date: start.toISOString().split('T')[0],
+            time: start.toTimeString().slice(0,5),
+            endTime: end.toTimeString().slice(0,5),
+            location,
+            fighters,
+            url,
+            description: event.description,
+            isNew: isNewEvent(start)
+          };
+        }).sort((a,b) => new Date(a.date+a.time) - new Date(b.date+b.time));
+        
+      } catch (e) {
+        console.error('iCal parse error:', e);
+        throw new Error('Failed to parse calendar data');
+      }
+    }
+
+    // ✅ FIXED: Always link to UFC events page
+    function generateWorkingUfcUrl(summary, date) {
+      return 'https://www.ufc.com/events';
+    }
+
+    function extractFighters(summary, description) {
+      const text = `${summary} ${description||''}`;
+      const match = text.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+vs\.?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);
+      if (match && match[1] && match[2]) return [match[1].trim(), match[2].trim()].slice(0, 6);
+      const words = summary.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?/g) || [];
+      return [...new Set(words)].slice(0, 4);
+    }
+
+    function isNewEvent(date) {
+      const now = new Date(), week = new Date();
+      week.setDate(now.getDate() + 7);
+      return date >= now && date <= week;
+    }
+
+    // UI State Management
+    function showLoading() {
+      elements.loadingState.classList.add('active');
+      elements.errorState.classList.remove('active');
+      elements.successState.classList.remove('active');
+      elements.calendarEl.classList.remove('loaded');
+      updateCacheIndicator();
+    }
+
+    function hideLoading() {
+      elements.loadingState.classList.remove('active');
+      elements.calendarEl.classList.add('loaded');
+    }
+
+    function showError(message, isFallback = false) {
+      elements.loadingState.classList.remove('active');
+      elements.errorState.classList.add('active');
+      if (isFallback) {
+        elements.errorMessage.innerHTML = `<strong>⚠️ Live feed unavailable.</strong><br>${message}<br><small>Showing cached/demo events.</small>`;
+        elements.retryBtn.style.display = 'none';
+        elements.useDemoBtn.style.display = 'none';
+      } else {
+        elements.errorMessage.textContent = message;
+        elements.retryBtn.style.display = 'inline-flex';
+        elements.useDemoBtn.style.display = 'inline-flex';
+      }
+      if (window.location.hostname === 'localhost') {
+        elements.errorDetails.textContent = message;
+        elements.errorDetails.style.display = 'block';
+      }
+      updateCacheIndicator();
+    }
+
+    function showSuccess(message) {
+      elements.successMessage.textContent = message;
+      elements.successState.classList.add('active');
+      setTimeout(() => elements.successState.classList.remove('active'), 4000);
+    }
+
+    // Calendar Rendering
+    function renderCalendar() {
+      if (ufcEvents.length === 0) { showError('No events found'); return; }
+      
+      const year = currentDate.getFullYear(), month = currentDate.getMonth();
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      elements.currentMonthDisplay.textContent = `${monthNames[month]} ${year}`;
+      elements.calendarGrid.innerHTML = '';
+      
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrev = new Date(year, month, 0).getDate();
+      
+      for (let i = firstDay - 1; i >= 0; i--) {
+        elements.calendarGrid.appendChild(createDayCell(daysInPrev - i, true, year, month - 1));
+      }
+      
+      const today = new Date();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+        elements.calendarGrid.appendChild(createDayCell(day, false, year, month, isToday));
+      }
+      
+      const total = 42, filled = firstDay + daysInMonth;
+      for (let i = 1; i <= total - filled; i++) {
+        elements.calendarGrid.appendChild(createDayCell(i, true, year, month + 1));
+      }
+    }
+
+    function createDayCell(dayNum, isOther, year, month, isToday = false) {
+      const cell = document.createElement('div');
+      cell.className = `calendar-day ${isOther?'other-month':''} ${isToday?'today':''}`;
+      
+      const num = document.createElement('span');
+      num.className = 'day-number';
+      num.textContent = dayNum;
+      cell.appendChild(num);
+      
+      if (!isOther) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+        const dayEvents = ufcEvents.filter(e => e.date === dateStr);
+        
+        dayEvents.forEach(event => {
+          const card = document.createElement('div');
+          card.className = `event-card ${event.type} ${event.isNew?'new-event':''}`;
+          card.innerHTML = `
+            <div class="event-name">${event.title}</div>
+            <div class="event-meta">
+              <span class="event-time">${formatTime(event.time)}</span>
+              <span class="event-location">${event.location.split(',')[0]}</span>
+            </div>
+          `;
+          card.onclick = () => openEventModal(event);
+          cell.appendChild(card);
+        });
+      }
+      return cell;
+    }
+
+    function formatTime(t) {
+      if (!t) return 'TBD';
+      const [h, m] = t.split(':');
+      let hour = parseInt(h) % 12 || 12;
+      const ampm = parseInt(h) >= 12 ? 'PM' : 'AM';
+      return `${hour}:${m||'00'} ${ampm}`;
+    }
+
+    // Modal
+    function openEventModal(event) {
+      selectedEvent = event;
+      elements.modalTitle.textContent = event.title;
+      
+      elements.modalBody.innerHTML = `
+        <div class="event-detail">
+          <div class="event-detail-icon">📅</div>
+          <div class="event-detail-content">
+            <h4>Date & Time</h4>
+            <p>${new Date(event.date).toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'})}<br><strong>${formatTime(event.time)}${event.endTime?` - ${formatTime(event.endTime)}`:''}</strong></p>
+          </div>
+        </div>
+        <div class="event-detail">
+          <div class="event-detail-icon">📍</div>
+          <div class="event-detail-content">
+            <h4>Location</h4>
+            <p>${event.location}</p>
+          </div>
+        </div>
+        <div class="event-detail">
+          <div class="event-detail-icon">🥊</div>
+          <div class="event-detail-content">
+            <h4>Featured Fighters</h4>
+            <div class="fighters-list">${event.fighters.map(f=>`<span class="fighter-tag">${f}</span>`).join('')}</div>
+          </div>
+        </div>
+        ${event.description?`<div class="event-detail"><div class="event-detail-icon">📝</div><div class="event-detail-content"><h4>Description</h4><p style="font-size:0.9rem;line-height:1.5">${event.description}</p></div></div>`:''}
+      `;
+      
+      // ✅ FIXED: Always link to UFC events page
+      elements.modalUfcLink.href = event.url || 'https://www.ufc.com/events';
+      elements.eventModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeEventModal() {
+      elements.eventModal.classList.remove('active');
+      document.body.style.overflow = '';
+      selectedEvent = null;
+    }
+
+    // Event Listeners
+    function setupEventListeners() {
+      elements.themeToggle.onclick = toggleTheme;
+      elements.prevMonthBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); };
+      elements.nextMonthBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); };
+      
+      elements.dataSourceSelect.onchange = async (e) => {
+        dataSource = e.target.value;
+        saveDataSourcePreference(dataSource);
+        updateDataSourceUI();
+        await loadEvents(true);
+      };
+      
+      elements.retryBtn.onclick = async () => {
+        elements.retryBtn.disabled = true;
+        elements.retryBtn.innerHTML = '🔄 Connecting...';
+        try { await loadEvents(true); hideError(); } 
+        catch { setTimeout(() => { elements.retryBtn.disabled = false; elements.retryBtn.innerHTML = '🔄 Retry Connection'; }, CONFIG.retryDelay); }
+      };
+      
+      elements.useDemoBtn.onclick = async () => {
+        dataSource = 'demo';
+        elements.dataSourceSelect.value = 'demo';
+        saveDataSourcePreference('demo');
+        updateDataSourceUI();
+        hideError();
+        await loadEvents(true);
+      };
+      
+      elements.dismissSuccess.onclick = () => elements.successState.classList.remove('active');
+      elements.modalClose.onclick = closeEventModal;
+      elements.modalCancel.onclick = closeEventModal;
+      elements.eventModal.onclick = (e) => { if (e.target === elements.eventModal) closeEventModal(); };
+      
+      document.onkeydown = (e) => {
+        if (e.key === 'Escape') { if (elements.eventModal.classList.contains('active')) closeEventModal(); return; }
+        if (!elements.eventModal.classList.contains('active') && elements.calendarEl.classList.contains('loaded')) {
+          if (e.key === 'ArrowLeft') { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
+          else if (e.key === 'ArrowRight') { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
+        }
+      };
+      
+      let touchStart = 0, touchEnd = 0;
+      elements.calendarGrid.ontouchstart = (e) => { touchStart = e.changedTouches[0].screenX; };
+      elements.calendarGrid.ontouchend = (e) => {
+        touchEnd = e.changedTouches[0].screenX;
+        if (!elements.calendarEl.classList.contains('loaded')) return;
+        if (touchStart - touchEnd > 50) { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
+        else if (touchEnd - touchStart > 50) { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
+      };
+    }
+
+    // Animation CSS
+    const style = document.createElement('style');
+    style.textContent = `@keyframes pulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(230,57,70,0.4)}70%{transform:scale(1.02);box-shadow:0 0 0 10px rgba(230,57,70,0)}100%{transform:scale(1)}}.new-event{animation:pulse 2s infinite}`;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
