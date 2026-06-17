@@ -1,6 +1,6 @@
 # UFC Calendar
 
-A modern, responsive web application for tracking UFC events. Features a clean calendar interface, light/dark mode, live iCalendar feed integration, and intelligent caching for optimal performance.
+A modern, responsive web application for tracking UFC events. Features a clean calendar interface, light/dark mode, live GitHub (ufc-cal) feed integration, and intelligent caching for optimal performance.
 
 
 <img width="1219" height="1064" alt="ufcc" src="https://github.com/user-attachments/assets/78e42403-1348-49ac-a5d3-209134f56b06" />
