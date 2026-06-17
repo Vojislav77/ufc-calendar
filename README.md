@@ -2,8 +2,8 @@
 
 A modern, responsive web application for tracking UFC events. Features a clean calendar interface, light/dark mode, live iCalendar feed integration, and intelligent caching for optimal performance.
 
-<img width="1182" height="1180" alt="ufc-calendar" src="https://github.com/user-attachments/assets/9cac0b7e-09bd-426a-bae9-08fafb40ea27" />
 
+<img width="1219" height="1064" alt="ufcc" src="https://github.com/user-attachments/assets/78e42403-1348-49ac-a5d3-209134f56b06" />
 
 
 ## Features
@@ -29,7 +29,7 @@ A modern, responsive web application for tracking UFC events. Features a clean c
 ### Option 2: Live Feed
 1. Open the app in a browser
 2. Select "Live Feed" from the data source dropdown
-3. Events will be fetched from mmacalendars.com
+3. Events will be fetched from GitHub (ufc-cal)
 
 ## Tech Stack
 
