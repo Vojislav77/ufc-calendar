@@ -1,4 +1,4 @@
-# 🥊 UFC Calendar
+# UFC Calendar
 
 A modern, responsive web application for tracking UFC events. Features a clean calendar interface, light/dark mode, live iCalendar feed integration, and intelligent caching for optimal performance.
 
@@ -6,20 +6,20 @@ A modern, responsive web application for tracking UFC events. Features a clean c
 
 
 
-## ✨ Features
+## Features
 
-- 📅 **Monthly Calendar View** - Browse UFC events by month with intuitive navigation
-- 🌓 **Light/Dark Mode** - Toggle between themes with persistent preference storage
-- 📡 **Live Data Feed** - Fetch events from mmacalendars.com iCal feed
-- 💾 **Smart Caching** - 6-hour cache with automatic fallback to demo data
-- 📱 **Fully Responsive** - Works seamlessly on desktop, tablet, and mobile devices
-- 🎯 **Demo Mode** - Pre-loaded sample events for instant testing (no internet required)
-- ⚡ **Fast Performance** - Vanilla JavaScript, no heavy frameworks
-- 🔍 **Event Details** - Click any event to view fighters, location, date/time
-- 🔗 **UFC Integration** - Direct links to UFC.com events page
-- ♿ **Accessible** - Keyboard navigation, ARIA labels, screen reader support
+- **Monthly Calendar View** - Browse UFC events by month with intuitive navigation
+- **Light/Dark Mode** - Toggle between themes with persistent preference storage
+- **Live Data Feed** - Fetch events from mmacalendars.com iCal feed
+- **Smart Caching** - 6-hour cache with automatic fallback to demo data
+- **Fully Responsive** - Works seamlessly on desktop, tablet, and mobile devices
+- **Demo Mode** - Pre-loaded sample events for instant testing (no internet required)
+- **Fast Performance** - Vanilla JavaScript, no heavy frameworks
+- **Event Details** - Click any event to view fighters, location, date/time
+- **UFC Integration** - Direct links to UFC.com events page
+- **Accessible** - Keyboard navigation, ARIA labels, screen reader support
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Demo Mode (Instant)
 1. Download or clone this repository
@@ -31,7 +31,7 @@ A modern, responsive web application for tracking UFC events. Features a clean c
 2. Select "Live Feed" from the data source dropdown
 3. Events will be fetched from mmacalendars.com
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **HTML5** - Semantic markup
 - **CSS3** - Modern styling with CSS Variables, Grid, Flexbox
@@ -39,11 +39,11 @@ A modern, responsive web application for tracking UFC events. Features a clean c
 - **ical.js** - iCalendar parsing library (CDN)
 - **CORS Proxies** - For cross-origin iCal feed access
 
-## ☁️ Live Demo
+## Live Demo
 
 [Click here to try it live](https://vojislav77.github.io/ufc-calendar)
 
-## 📦 Installation
+## Installation
 
 ```bash
 # Clone the repository
