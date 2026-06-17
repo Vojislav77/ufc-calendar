@@ -691,7 +691,7 @@
         <label for="data-source">Data Source:</label>
         <select id="data-source">
           <option value="demo">🎯 Demo Mode (Instant Load)</option>
-          <option value="live">🌐 Live Feed (mmacalendars.com)</option>
+          <option value="live">🌐 Live Feed (GitHub ufc-cal)</option>
         </select>
         <div class="data-source-info">
           <span class="badge badge-demo" id="source-badge">Demo</span>
@@ -758,12 +758,8 @@
 
   <script>
     const CONFIG = {
-      icalUrl: 'https://mmacalendars.com/ufc',
-      corsProxies: [
-        'https://api.codetabs.com/v1/proxy?quest=',
-        'https://corsproxy.io/?',
-        'https://api.allorigins.win/raw?url='
-      ],
+      icalUrl: 'https://raw.githubusercontent.com/clarencechaan/ufc-cal/ics/UFC.ics',
+      corsProxies: [],
       cacheKey: 'mma_calendar_events_final',
       cacheExpiry: 6 * 60 * 60 * 1000,
       retryDelay: 2000,
@@ -831,7 +827,7 @@
       ]
     };
 
-    let currentDate = new Date(2026, 3, 1);
+    let currentDate = new Date();
     let selectedEvent = null;
     let ufcEvents = [];
     let isLoading = false;
@@ -905,7 +901,7 @@
       } else {
         elements.sourceBadge.textContent = 'Live';
         elements.sourceBadge.className = 'badge badge-live';
-        elements.sourceDescription.textContent = 'Fetching from mmacalendars.com';
+        elements.sourceDescription.textContent = 'Fetching from GitHub (ufc-cal)';
       }
     }
 
@@ -1002,36 +998,30 @@
     }
 
     async function fetchLiveEvents() {
-      let lastError = null;
-      for (let i = 0; i < CONFIG.corsProxies.length; i++) {
-        const proxy = CONFIG.corsProxies[i];
-        const fetchUrl = `${proxy}${encodeURIComponent(CONFIG.icalUrl)}`;
-        elements.loadingSubtext.textContent = `Trying proxy ${i+1} of ${CONFIG.corsProxies.length}...`;
-        
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 10000);
-          const response = await fetch(fetchUrl, { signal: controller.signal, headers: { 'Accept': 'text/calendar' } });
-          clearTimeout(timeout);
-          
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const icsText = await response.text();
-          if (!icsText.includes('BEGIN:VCALENDAR')) throw new Error('Invalid iCal format');
-          
-          ufcEvents = parseICalData(icsText);
-          if (ufcEvents.length === 0) throw new Error('No events found');
-          
-          cacheEvents(ufcEvents);
-          hideLoading();
-          showSuccess(`Loaded ${ufcEvents.length} live events`);
-          renderCalendar();
-          return;
-          
-        } catch (error) {
-          lastError = error;
-        }
+      elements.loadingSubtext.textContent = 'Fetching from GitHub...';
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const response = await fetch(CONFIG.icalUrl, { signal: controller.signal, headers: { 'Accept': 'text/calendar' } });
+        clearTimeout(timeout);
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const icsText = await response.text();
+        if (!icsText.includes('BEGIN:VCALENDAR')) throw new Error('Invalid iCal format');
+
+        ufcEvents = parseICalData(icsText);
+        if (ufcEvents.length === 0) throw new Error('No events found');
+
+        cacheEvents(ufcEvents);
+        hideLoading();
+        showSuccess(`Loaded ${ufcEvents.length} live events`);
+        renderCalendar();
+        return;
+
+      } catch (error) {
+        throw new Error(`Live feed failed: ${error.message}`);
       }
-      throw new Error(`All proxies failed`);
     }
 
     function parseICalData(icsText) {
