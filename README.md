@@ -32,6 +32,17 @@ A modern, responsive web application for tracking UFC events. Features a clean c
 2. Select "Live Feed" from the data source dropdown
 3. Events will be fetched from GitHub (ufc-cal)
 
+### Option 3: AppImage (Linux Desktop App)
+1. Download `UFC-Calendar-1.0.0.AppImage` from the [Releases](https://github.com/vojislav77/ufc-calendar/releases) page
+2. Make it executable and run:
+   ```bash
+   chmod +x UFC-Calendar-1.0.0.AppImage
+   ./UFC-Calendar-1.0.0.AppImage
+   ```
+3. The app runs as a native desktop window (WebKitGTK) with the UFC Calendar icon in the window titlebar and taskbar. No installation required.
+
+> The AppImage bundles everything it needs, including `ical.js`, so it works offline in Demo mode. Live Feed mode requires an internet connection.
+
 ## Tech Stack
 
 - **HTML5** - Semantic markup
@@ -70,6 +81,15 @@ cd ufc-calendar
 npx serve .
 # or
 python -m http.server 8000
+```
+
+### Linux Desktop (AppImage)
+
+Download the AppImage from the [Releases](https://github.com/vojislav77/ufc-calendar/releases) page:
+
+```bash
+chmod +x UFC-Calendar-1.0.0.AppImage
+./UFC-Calendar-1.0.0.AppImage
 ```
 
 > Tip: After updating the app, do a hard refresh (Ctrl+Shift+R / Cmd+Shift+R) if
