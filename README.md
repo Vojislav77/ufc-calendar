@@ -1,6 +1,6 @@
 # UFC Calendar
 
-A modern, responsive web application for tracking UFC events. Features a clean calendar interface, light/dark mode, live GitHub (ufc-cal) feed integration, and intelligent caching for optimal performance.
+A modern, responsive web application for tracking UFC events. Features a clean calendar interface, light/dark mode, live GitHub (ufc-cal) feed integration, and intelligent caching for optimal performance. Everything lives in a single `index.html` file — no build step, no dependencies to install.
 
 
 <img width="1219" height="1064" alt="ufcc" src="https://github.com/user-attachments/assets/78e42403-1348-49ac-a5d3-209134f56b06" />
@@ -8,16 +8,17 @@ A modern, responsive web application for tracking UFC events. Features a clean c
 
 ## Features
 
-- **Monthly Calendar View** - Browse UFC events by month with intuitive navigation
+- **Monthly Calendar View** - Browse UFC events by month with arrow-key and swipe navigation
 - **Light/Dark Mode** - Toggle between themes with persistent preference storage
-- **Live Data Feed** - Fetch events from mmacalendars.com iCal feed
-- **Smart Caching** - 6-hour cache with automatic fallback to demo data
+- **Live Data Feed** - Fetch events from the GitHub ufc-cal iCal feed
+- **Smart Caching** - Live events cached for 6 hours for faster repeat visits
 - **Fully Responsive** - Works seamlessly on desktop, tablet, and mobile devices
-- **Demo Mode** - Pre-loaded sample events for instant testing (no internet required)
+- **Demo Mode** - Sample events generated around upcoming weekends, so they never go stale (no internet required)
 - **Fast Performance** - Vanilla JavaScript, no heavy frameworks
 - **Event Details** - Click any event to view fighters, location, date/time
 - **UFC Integration** - Direct links to UFC.com events page
-- **Accessible** - Keyboard navigation, ARIA labels, screen reader support
+- **Accessible** - Keyboard-navigable event cards, ARIA labels, screen reader support
+- **Secure Rendering** - All remote feed content is HTML-escaped before display
 
 ## Quick Start
 
@@ -37,7 +38,19 @@ A modern, responsive web application for tracking UFC events. Features a clean c
 - **CSS3** - Modern styling with CSS Variables, Grid, Flexbox
 - **Vanilla JavaScript (ES6+)** - No frameworks, pure performance
 - **ical.js** - iCalendar parsing library (CDN)
-- **CORS Proxies** - For cross-origin iCal feed access
+- **GitHub Raw** - Direct, CORS-friendly access to the ufc-cal iCal file
+
+## Project Structure
+
+```
+ufc-calendar/
+├── index.html      # The entire application (HTML + CSS + JS)
+├── favicon.png     # Site icon
+└── README.md       # You are here
+```
+
+The application is fully self-contained in `index.html`; the only external
+dependency is the ical.js library loaded from a CDN.
 
 ## Live Demo
 
@@ -50,10 +63,14 @@ A modern, responsive web application for tracking UFC events. Features a clean c
 git clone https://github.com/vojislav77/ufc-calendar.git
 
 # Navigate to directory
-cd mma-calendar
+cd ufc-calendar
 
 # Open index.html in your browser
 # Or use a local server:
 npx serve .
 # or
 python -m http.server 8000
+```
+
+> Tip: After updating the app, do a hard refresh (Ctrl+Shift+R / Cmd+Shift+R) if
+> the browser is still showing cached older content.
