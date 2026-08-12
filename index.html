@@ -365,6 +365,14 @@
       50% { opacity: 0.5; }
     }
 
+    @keyframes pulseRing {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.4); }
+      70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(230, 57, 70, 0); }
+      100% { transform: scale(1); }
+    }
+
+    .new-event { animation: pulseRing 2s infinite; }
+
     /* Calendar */
     .calendar {
       background: var(--bg-card);
@@ -703,7 +711,7 @@
       <div id="loading-state" class="status-container loading-container">
         <div class="loading-spinner"></div>
         <p class="loading-text">Loading UFC events...</p>
-        <p class="loading-subtext" id="loading-subtext">Trying proxy 1 of 3...</p>
+        <p class="loading-subtext" id="loading-subtext">Fetching latest events...</p>
         <p class="cache-indicator live">Fetching live data</p>
       </div>
 
@@ -742,7 +750,7 @@
   </div>
 
   <!-- Event Modal -->
-  <div class="modal" id="event-modal" role="dialog" aria-modal="true">
+  <div class="modal" id="event-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title" id="modal-title">Event Details</h2>
@@ -759,73 +767,95 @@
   <script>
     const CONFIG = {
       icalUrl: 'https://raw.githubusercontent.com/clarencechaan/ufc-cal/ics/UFC.ics',
-      corsProxies: [],
       cacheKey: 'mma_calendar_events_final',
       cacheExpiry: 6 * 60 * 60 * 1000,
       retryDelay: 2000,
-      maxRetries: 3,
-      demoEvents: [
-        {
+      maxRetries: 3
+    };
+
+    function escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getNextSaturday(daysFromNow) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const daysUntilSat = (6 - today.getDay() + 7) % 7 || 7;
+      return new Date(today.getFullYear(), today.getMonth(), today.getDate() + daysUntilSat + daysFromNow);
+    }
+
+    function buildDemoEvents() {
+      const sat1 = getNextSaturday(0);
+      const sat2 = getNextSaturday(7);
+      const sat3 = getNextSaturday(14);
+      const sat4 = getNextSaturday(28);
+      const mk = (eventDate, base) => ({ ...base, eventDate, date: formatDateKey(eventDate) });
+      return [
+        mk(sat1, {
           id: 'demo-ufc-327',
           title: 'UFC 327: Prochazka vs Ulberg',
           type: 'main',
-          date: '2026-04-11',
           time: '22:00',
           endTime: '02:00',
           location: 'T-Mobile Arena, Las Vegas, NV',
           fighters: ['Jiří Procházka', 'Carlos Ulberg', 'Paulo Costa', 'Curtis Blaydes'],
           url: 'https://www.ufc.com/events',
           description: 'Light Heavyweight main event featuring former champion Jiří Procházka.'
-        },
-        {
-          id: 'demo-ufc-fn-apr18',
+        }),
+        mk(sat1, {
+          id: 'demo-ufc-327-prelims',
+          title: 'Prelims: UFC 327',
+          type: 'prelim',
+          time: '20:00',
+          endTime: '22:00',
+          location: 'T-Mobile Arena, Las Vegas, NV',
+          fighters: ['Patricio Pitbull', 'Aaron Pico', 'Kevin Holland'],
+          url: 'https://www.ufc.com/events'
+        }),
+        mk(sat2, {
+          id: 'demo-ufc-fn-sat2',
           title: 'UFC Fight Night: Burns vs Malott',
           type: 'main',
-          date: '2026-04-18',
           time: '20:00',
           endTime: '23:00',
           location: 'Scotiabank Arena, Toronto, Canada',
           fighters: ['Gilbert Burns', 'Mike Malott', 'Charles Jourdain'],
           url: 'https://www.ufc.com/events',
           description: 'Welterweight showdown in Toronto.'
-        },
-        {
-          id: 'demo-ufc-fn-apr25',
+        }),
+        mk(sat3, {
+          id: 'demo-ufc-fn-sat3',
           title: 'UFC Fight Night: Sterling vs Zalal',
           type: 'main',
-          date: '2026-04-25',
           time: '21:00',
           endTime: '00:00',
           location: 'UFC Apex, Las Vegas, NV',
           fighters: ['Aljamain Sterling', 'Youssef Zalal', 'Rafa Garcia'],
           url: 'https://www.ufc.com/events',
           description: 'Bantamweight action from the UFC Apex.'
-        },
-        {
-          id: 'demo-ufc-327-prelims',
-          title: 'Prelims: UFC 327',
-          type: 'prelim',
-          date: '2026-04-11',
-          time: '20:00',
-          endTime: '22:00',
-          location: 'T-Mobile Arena, Las Vegas, NV',
-          fighters: ['Patricio Pitbull', 'Aaron Pico', 'Kevin Holland'],
-          url: 'https://www.ufc.com/events'
-        },
-        {
+        }),
+        mk(sat4, {
           id: 'demo-ufc-328',
           title: 'UFC 328: Chimaev vs Strickland',
           type: 'main',
-          date: '2026-05-09',
           time: '21:00',
           endTime: '01:00',
           location: 'Etihad Arena, Abu Dhabi, UAE',
           fighters: ['Khamzat Chimaev', 'Sean Strickland', 'Alexander Volkov'],
           url: 'https://www.ufc.com/events',
           description: 'Middleweight title eliminator in Abu Dhabi.'
-        }
-      ]
-    };
+        })
+      ];
+    }
 
     let currentDate = new Date();
     let selectedEvent = null;
@@ -967,7 +997,10 @@
         if (!forceRefresh && dataSource !== 'demo') {
           const cached = getCachedEvents();
           if (cached) {
-            ufcEvents = cached;
+            ufcEvents = cached.map(e => ({
+              ...e,
+              isNew: isNewEvent(e.eventDate ? new Date(e.eventDate) : new Date(e.date))
+            }));
             hideLoading();
             showSuccess(`Loaded ${cached.length} events from cache`);
             renderCalendar();
@@ -977,7 +1010,7 @@
         
         if (dataSource === 'demo') {
           await new Promise(r => setTimeout(r, 500));
-          ufcEvents = CONFIG.demoEvents.map(e => ({...e, isNew: isNewEvent(new Date(e.date))}));
+          ufcEvents = buildDemoEvents().map(e => ({ ...e, isNew: isNewEvent(e.eventDate) }));
           hideLoading();
           showSuccess(`Loaded ${ufcEvents.length} demo events`);
           renderCalendar();
@@ -988,10 +1021,10 @@
         
       } catch (error) {
         console.error('Load error:', error);
-        showError(error.message || 'Failed to load events');
-        if (dataSource === 'live') {
-          showError('Live feed unavailable. Switch to Demo mode for instant access.', true);
-        }
+        const detail = error.message || 'Failed to load events';
+        showError(dataSource === 'live'
+          ? `Live feed unavailable: ${detail}. You can switch to Demo mode below.`
+          : detail);
       } finally {
         isLoading = false;
       }
@@ -1048,16 +1081,17 @@
             id: event.uid || `ufc-${Date.now()}`,
             title: summary,
             type,
-            date: start.toISOString().split('T')[0],
+            date: formatDateKey(start),
             time: start.toTimeString().slice(0,5),
             endTime: end.toTimeString().slice(0,5),
             location,
             fighters,
             url: 'https://www.ufc.com/events',
             description: event.description,
+            eventDate: start,
             isNew: isNewEvent(start)
           };
-        }).sort((a,b) => new Date(a.date+a.time) - new Date(b.date+b.time));
+        }).sort((a,b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
         
       } catch (e) {
         throw new Error('Failed to parse calendar');
@@ -1091,22 +1125,22 @@
       elements.calendarEl.classList.add('loaded');
     }
 
-    function showError(message, isFallback = false) {
+    function showError(message) {
       elements.loadingState.classList.remove('active');
+      elements.successState.classList.remove('active');
       elements.errorState.classList.add('active');
-      if (isFallback) {
-        elements.errorMessage.innerHTML = `<strong>⚠️ Live feed unavailable.</strong><br>${message}`;
-        elements.retryBtn.style.display = 'none';
-        elements.useDemoBtn.style.display = 'none';
-      } else {
-        elements.errorMessage.textContent = message;
-        elements.retryBtn.style.display = 'inline-flex';
-        elements.useDemoBtn.style.display = 'inline-flex';
-      }
+      elements.errorMessage.textContent = message;
+      elements.retryBtn.style.display = 'inline-flex';
+      elements.useDemoBtn.style.display = 'inline-flex';
       updateCacheIndicator();
     }
 
+    function hideError() {
+      elements.errorState.classList.remove('active');
+    }
+
     function showSuccess(message) {
+      elements.errorState.classList.remove('active');
       elements.successMessage.textContent = message;
       elements.successState.classList.add('active');
       setTimeout(() => elements.successState.classList.remove('active'), 4000);
@@ -1156,14 +1190,23 @@
         dayEvents.forEach(event => {
           const card = document.createElement('div');
           card.className = `event-card ${event.type} ${event.isNew?'new-event':''}`;
+          card.setAttribute('role', 'button');
+          card.setAttribute('tabindex', '0');
+          card.setAttribute('aria-label', `Open details for ${event.title}`);
           card.innerHTML = `
-            <div class="event-name">${event.title}</div>
+            <div class="event-name">${escapeHTML(event.title)}</div>
             <div class="event-meta">
               <span class="event-time">${formatTime(event.time)}</span>
-              <span class="event-location">${event.location.split(',')[0]}</span>
+              <span class="event-location">${escapeHTML(event.location.split(',')[0])}</span>
             </div>
           `;
           card.onclick = () => openEventModal(event);
+          card.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openEventModal(event);
+            }
+          };
           cell.appendChild(card);
         });
       }
@@ -1182,40 +1225,54 @@
       selectedEvent = event;
       elements.modalTitle.textContent = event.title;
       
+      const eventDate = event.eventDate ? new Date(event.eventDate) : new Date(`${event.date}T12:00`);
+      const dateLabel = eventDate.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+      const timeLabel = `${formatTime(event.time)}${event.endTime?` - ${formatTime(event.endTime)}`:''}`;
+      const fighterTags = event.fighters.map(f => `<span class="fighter-tag">${escapeHTML(f)}</span>`).join('');
+      const descBlock = event.description
+        ? `<div class="event-detail"><div class="event-detail-icon">📝</div><div class="event-detail-content"><h4>Description</h4><p style="font-size:0.9rem;line-height:1.5">${escapeHTML(event.description)}</p></div></div>`
+        : '';
+      
       elements.modalBody.innerHTML = `
         <div class="event-detail">
           <div class="event-detail-icon">📅</div>
           <div class="event-detail-content">
             <h4>Date & Time</h4>
-            <p>${new Date(event.date).toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'})}<br><strong>${formatTime(event.time)}${event.endTime?` - ${formatTime(event.endTime)}`:''}</strong></p>
+            <p>${dateLabel}<br><strong>${timeLabel}</strong></p>
           </div>
         </div>
         <div class="event-detail">
           <div class="event-detail-icon">📍</div>
           <div class="event-detail-content">
             <h4>Location</h4>
-            <p>${event.location}</p>
+            <p>${escapeHTML(event.location)}</p>
           </div>
         </div>
         <div class="event-detail">
           <div class="event-detail-icon">🥊</div>
           <div class="event-detail-content">
             <h4>Featured Fighters</h4>
-            <div class="fighters-list">${event.fighters.map(f=>`<span class="fighter-tag">${f}</span>`).join('')}</div>
+            <div class="fighters-list">${fighterTags}</div>
           </div>
         </div>
-        ${event.description?`<div class="event-detail"><div class="event-detail-icon">📝</div><div class="event-detail-content"><h4>Description</h4><p style="font-size:0.9rem;line-height:1.5">${event.description}</p></div></div>`:''}
+        ${descBlock}
       `;
       
       elements.modalUfcLink.href = 'https://www.ufc.com/events';
       elements.eventModal.classList.add('active');
       document.body.style.overflow = 'hidden';
+      elements.modalClose.focus();
     }
 
     function closeEventModal() {
       elements.eventModal.classList.remove('active');
       document.body.style.overflow = '';
       selectedEvent = null;
+    }
+
+    function resetRetryBtn(isBusy) {
+      elements.retryBtn.disabled = !!isBusy;
+      elements.retryBtn.innerHTML = isBusy ? '🔄 Connecting...' : '🔄 Retry Connection';
     }
 
     function setupEventListeners() {
@@ -1231,10 +1288,9 @@
       };
       
       elements.retryBtn.onclick = async () => {
-        elements.retryBtn.disabled = true;
-        elements.retryBtn.innerHTML = '🔄 Connecting...';
-        try { await loadEvents(true); hideError(); } 
-        catch { setTimeout(() => { elements.retryBtn.disabled = false; elements.retryBtn.innerHTML = '🔄 Retry Connection'; }, CONFIG.retryDelay); }
+        resetRetryBtn(true);
+        try { await loadEvents(true); hideError(); resetRetryBtn(false); }
+        catch { setTimeout(() => resetRetryBtn(false), CONFIG.retryDelay); }
       };
       
       elements.useDemoBtn.onclick = async () => {
@@ -1268,10 +1324,6 @@
         else if (touchEnd - touchStart > 50) { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
       };
     }
-
-    const style = document.createElement('style');
-    style.textContent = `@keyframes pulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(230,57,70,0.4)}70%{transform:scale(1.02);box-shadow:0 0 0 10px rgba(230,57,70,0)}100%{transform:scale(1)}}.new-event{animation:pulse 2s infinite}`;
-    document.head.appendChild(style);
   </script>
 </body>
 </html>
